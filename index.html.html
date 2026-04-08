@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Plateforme S5 — Tout-en-un</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0c0f14;--surface:#151921;--surface2:#1c2230;--surface3:#242b38;--border:#2a3142;--text:#e2e8f0;--text-muted:#8492a6;--text-dim:#5a6577;--green:#22c55e;--green-dim:rgba(34,197,94,0.12);--red:#ef4444;--red-dim:rgba(239,68,68,0.12);--orange:#f59e0b;--orange-dim:rgba(245,158,11,0.12);--blue:#3b82f6;--blue-dim:rgba(59,130,246,0.12);--purple:#a78bfa;--cyan:#22d3ee;--pink:#ec4899;--radius:14px;--radius-sm:8px}
+*{margin:0;padding:0;box-sizing:border-box}body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}.topbar-left{display:flex;align-items:center;gap:12px}.topbar h1{font-size:17px;font-weight:700}.topbar h1 span{color:var(--green)}.badge{padding:3px 10px;border-radius:20px;font-size:10px;font-weight:600}.badge-green{background:var(--green-dim);color:var(--green)}.badge-blue{background:var(--blue-dim);color:var(--blue)}
+.nav{display:flex;gap:3px;background:var(--surface2);padding:3px;border-radius:10px}.nav-btn{padding:7px 16px;border:none;background:transparent;color:var(--text-muted);font-family:inherit;font-size:12px;font-weight:600;border-radius:7px;cursor:pointer;transition:all 0.2s}.nav-btn.active{background:var(--blue);color:#fff}.nav-btn:hover:not(.active){color:var(--text);background:var(--surface3)}
+.btn{padding:8px 18px;border:none;border-radius:var(--radius-sm);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.15s;display:inline-flex;align-items:center;gap:6px}.btn-primary{background:var(--blue);color:#fff}.btn-primary:hover{background:#2563eb;transform:translateY(-1px)}.btn-green{background:var(--green);color:#fff;font-size:14px;padding:12px 28px}.btn-green:hover{background:#16a34a;transform:translateY(-1px);box-shadow:0 6px 20px rgba(34,197,94,0.3)}.btn-outline{background:transparent;color:var(--text-muted);border:1px solid var(--border)}.btn-outline:hover{color:var(--text)}.btn-danger{background:var(--red);color:#fff;font-size:11px;padding:5px 12px}.btn-sm{padding:5px 12px;font-size:11px}
+.container{max-width:1440px;margin:0 auto;padding:18px 24px}.section{display:none}.section.active{display:block;animation:fadeIn 0.35s ease}@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+/* KPI */
+.kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:18px}.kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:15px 18px;position:relative;overflow:hidden}.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}.kpi.g::before{background:var(--green)}.kpi.b::before{background:var(--blue)}.kpi.r::before{background:var(--red)}.kpi.o::before{background:var(--orange)}.kpi.p::before{background:var(--purple)}.kpi-label{font-size:10px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}.kpi-val{font-size:26px;font-weight:700;letter-spacing:-1px}.kpi.g .kpi-val{color:var(--green)}.kpi.b .kpi-val{color:var(--blue)}.kpi.r .kpi-val{color:var(--red)}.kpi.o .kpi-val{color:var(--orange)}.kpi.p .kpi-val{color:var(--purple)}.kpi-sub{font-size:10px;color:var(--text-dim);margin-top:2px}
+.grid-2{display:grid;grid-template-columns:2fr 1fr;gap:12px;margin-bottom:16px}.grid-half{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px}.card h3{font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:12px}.card canvas{max-height:240px}
+table.dt{width:100%;border-collapse:collapse;font-size:11px}table.dt th{text-align:left;padding:8px 10px;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);border-bottom:2px solid var(--border);background:var(--surface2)}table.dt td{padding:8px 10px;border-bottom:1px solid var(--border);color:var(--text-muted)}table.dt tr:hover td{background:var(--surface2)}
+.sp{display:inline-block;padding:2px 10px;border-radius:12px;font-size:10px;font-weight:700}.sp-100{background:var(--green-dim);color:var(--green)}.sp-75{background:rgba(139,92,246,.15);color:#a78bfa}.sp-50{background:var(--orange-dim);color:var(--orange)}.sp-25{background:rgba(251,146,60,.15);color:#fb923c}.sp-0{background:var(--red-dim);color:var(--red)}
+/* AUDIT FORM */
+.audit-form{max-width:900px;margin:0 auto}
+.form-header{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px 24px;margin-bottom:16px}
+.form-header h2{font-size:18px;margin-bottom:14px;color:var(--green)}
+.form-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.form-group label{display:block;font-size:10px;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.form-group input,.form-group select{width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:var(--radius-sm);font-family:inherit;font-size:13px;font-weight:600}
+.form-group input:focus,.form-group select:focus{outline:none;border-color:var(--blue)}
+.bloc-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:12px;overflow:hidden}
+.bloc-header{padding:12px 20px;font-weight:700;font-size:13px;cursor:default;display:flex;justify-content:space-between;align-items:center}
+.bloc-score{font-size:12px;font-weight:700;padding:3px 12px;border-radius:12px}
+.point-row{display:flex;align-items:center;gap:12px;padding:10px 20px;border-top:1px solid var(--border);transition:background .15s}
+.point-row:hover{background:var(--surface2)}
+.point-num{width:28px;font-weight:700;font-size:13px;color:var(--text-dim);text-align:center;flex-shrink:0}
+.point-text{flex:1;font-size:12px;line-height:1.5}
+.score-btns{display:flex;gap:4px;flex-shrink:0}
+.score-btn{width:42px;height:30px;border:1px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text-muted);font-family:inherit;font-size:10px;font-weight:700;cursor:pointer;transition:all .15s}
+.score-btn:hover{border-color:var(--text-muted);color:var(--text)}
+.score-btn.active-100{background:var(--green-dim);border-color:var(--green);color:var(--green)}
+.score-btn.active-75{background:rgba(139,92,246,.15);border-color:#a78bfa;color:#a78bfa}
+.score-btn.active-50{background:var(--orange-dim);border-color:var(--orange);color:var(--orange)}
+.score-btn.active-25{background:rgba(251,146,60,.15);border-color:#fb923c;color:#fb923c}
+.score-btn.active-0{background:var(--red-dim);border-color:var(--red);color:var(--red)}
+.comment-input{width:100%;background:var(--surface3);border:1px solid transparent;color:var(--text);padding:6px 10px;border-radius:6px;font-family:inherit;font-size:11px;margin-top:6px;display:none}
+.comment-input.show{display:block}
+.comment-input:focus{outline:none;border-color:var(--orange)}
+.form-footer{text-align:center;padding:20px;margin-top:8px}
+.live-score{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 24px;margin-bottom:16px;display:flex;justify-content:space-around;align-items:center;text-align:center}
+.live-item .live-val{font-size:28px;font-weight:700}.live-item .live-lbl{font-size:10px;color:var(--text-dim);text-transform:uppercase}
+/* Audit list */
+.audit-list{display:flex;flex-direction:column;gap:8px}.audit-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 16px;display:flex;justify-content:space-between;align-items:center;transition:background .2s}.audit-item:hover{background:var(--surface2)}.audit-info{display:flex;gap:16px;align-items:center}.audit-info .date{font-weight:600;color:var(--text);font-size:13px}.audit-info .meta{font-size:11px;color:var(--text-muted)}.audit-score{font-size:18px;font-weight:700}.score-high{color:var(--green)}.score-mid{color:var(--orange)}.score-low{color:var(--red)}
+.empty{text-align:center;padding:50px 20px;color:var(--text-dim)}.empty-icon{font-size:44px;margin-bottom:10px}
+.filters{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}.filter select{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:var(--radius-sm);font-family:inherit;font-size:11px;cursor:pointer}.filter label{font-size:9px;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:2px}
+.toast{position:fixed;bottom:20px;right:20px;background:var(--green);color:#fff;padding:12px 22px;border-radius:10px;font-weight:600;font-size:13px;z-index:999;animation:slideUp .4s ease;box-shadow:0 8px 28px rgba(34,197,94,.3)}@keyframes slideUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+.team-rank{display:flex;flex-direction:column;gap:8px;margin-top:6px}.team-bar{display:flex;align-items:center;gap:10px}.team-name{width:65px;font-size:12px;font-weight:600;text-align:right}.team-track{flex:1;height:28px;background:var(--surface2);border-radius:7px;overflow:hidden}.team-fill{height:100%;border-radius:7px;display:flex;align-items:center;justify-content:flex-end;padding-right:8px;font-size:11px;font-weight:700;color:#fff;transition:width .6s ease}.team-medal{font-size:16px;width:24px;text-align:center}
+@media(max-width:1024px){.kpi-row{grid-template-columns:repeat(2,1fr)}.grid-2,.grid-half{grid-template-columns:1fr}.form-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.kpi-row{grid-template-columns:1fr}.container{padding:10px}.form-grid{grid-template-columns:1fr}.score-btns{gap:2px}.score-btn{width:36px;font-size:9px}}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+</style>
+</head>
+<body>
+<div class="topbar"><div class="topbar-left"><h1>Plateforme <span>S5</span></h1><span class="badge badge-green">29 pts · 2x/sem</span><span class="badge badge-blue" id="auditCount">0 audits</span></div><div><nav class="nav"><button class="nav-btn active" data-sec="audit" onclick="showSection('audit')">✏️ Nouvel audit</button><button class="nav-btn" data-sec="dashboard" onclick="showSection('dashboard')">📊 Dashboard</button><button class="nav-btn" data-sec="equipes" onclick="showSection('equipes')">🏆 Équipes</button><button class="nav-btn" data-sec="audits" onclick="showSection('audits')">📂 Historique</button><button class="nav-btn" data-sec="import" onclick="showSection('import')">📥 Importer</button></nav></div></div>
+<div class="container">
+
+<!-- ====== NOUVEL AUDIT ====== -->
+<div id="sec-audit" class="section active">
+<div class="audit-form">
+  <div class="form-header">
+    <h2>✏️ Nouvel audit terrain</h2>
+    <div class="form-grid">
+      <div class="form-group"><label>Date</label><input type="date" id="aDate"></div>
+      <div class="form-group"><label>Quart</label><select id="aQuart"><option value="Jour">Jour (07h–19h)</option><option value="Nuit">Nuit (19h–07h)</option></select></div>
+      <div class="form-group"><label>Équipe</label><select id="aEquipe"><option value="Jour A">Jour A</option><option value="Jour B">Jour B</option><option value="Nuit A">Nuit A</option><option value="Nuit B">Nuit B</option></select></div>
+      <div class="form-group"><label>Ligne</label><input type="text" id="aLigne" placeholder="PD22, PD23..."></div>
+      <div class="form-group"><label>Auditeur</label><input type="text" id="aAuditeur" placeholder="Ton nom"></div>
+      <div class="form-group"><label>Points remplis</label><div id="progressText" style="padding:9px 0;font-size:14px;font-weight:700;color:var(--blue)">0 / 29</div></div>
+    </div>
+  </div>
+
+  <div class="live-score" id="liveScore">
+    <div class="live-item"><div class="live-val" id="lsAvg" style="color:var(--green)">—</div><div class="live-lbl">Score moyen</div></div>
+    <div class="live-item"><div class="live-val" id="lsFull" style="color:var(--blue)">0</div><div class="live-lbl">À 100%</div></div>
+    <div class="live-item"><div class="live-val" id="lsWeak" style="color:var(--red)">0</div><div class="live-lbl">≤ 50%</div></div>
+  </div>
+
+  <div id="auditBlocs"></div>
+
+  <div class="form-footer">
+    <button class="btn btn-green" onclick="saveAudit()">💾 Enregistrer l'audit</button>
+    <button class="btn btn-outline" style="margin-left:10px" onclick="resetForm()">🗑️ Réinitialiser</button>
+  </div>
+</div>
+</div>
+
+<!-- ====== DASHBOARD ====== -->
+<div id="sec-dashboard" class="section">
+<div id="dashEmpty" class="empty"><div class="empty-icon">📊</div><p>Aucun audit enregistré. Remplis ton premier audit !</p></div>
+<div id="dashContent" style="display:none">
+  <div class="filters"><div class="filter"><label>Ligne</label><select id="fLine" onchange="refresh()"><option value="all">Toutes</option></select></div><div class="filter"><label>Quart</label><select id="fQuart" onchange="refresh()"><option value="all">Tous</option></select></div><div class="filter"><label>Équipe</label><select id="fEquipe" onchange="refresh()"><option value="all">Toutes</option></select></div><div class="filter"><label>Auditeur</label><select id="fAudit" onchange="refresh()"><option value="all">Tous</option></select></div></div>
+  <div class="kpi-row">
+    <div class="kpi g"><div class="kpi-label">Score global</div><div class="kpi-val" id="k1">—</div><div class="kpi-sub" id="k1s"></div></div>
+    <div class="kpi b"><div class="kpi-label">Audits</div><div class="kpi-val" id="k2">—</div><div class="kpi-sub" id="k2s"></div></div>
+    <div class="kpi r"><div class="kpi-label">Points ≤ 50%</div><div class="kpi-val" id="k3">—</div><div class="kpi-sub" id="k3s"></div></div>
+    <div class="kpi o"><div class="kpi-label">Score min</div><div class="kpi-val" id="k4">—</div><div class="kpi-sub" id="k4s"></div></div>
+    <div class="kpi p"><div class="kpi-label">Meilleure équipe</div><div class="kpi-val" id="k5" style="font-size:20px">—</div><div class="kpi-sub" id="k5s"></div></div>
+  </div>
+  <div class="grid-2"><div class="card"><h3>📈 Évolution du score</h3><canvas id="cTrend"></canvas></div><div class="card"><h3>📊 Score par bloc</h3><canvas id="cBloc"></canvas></div></div>
+  <div class="grid-half"><div class="card"><h3>🔴 Points les plus faibles</h3><canvas id="cWeak"></canvas></div><div class="card"><h3>🏆 Score par équipe</h3><canvas id="cTeam"></canvas></div></div>
+  <div class="card"><h3>📋 Points ≤ 50%</h3><div style="overflow-x:auto"><table class="dt"><thead><tr><th>Date</th><th>Équipe</th><th>Ligne</th><th>Bloc</th><th>Point</th><th>Score</th><th>Commentaire</th></tr></thead><tbody id="weakTable"></tbody></table></div></div>
+</div></div>
+
+<!-- ====== ÉQUIPES ====== -->
+<div id="sec-equipes" class="section">
+<div id="eqEmpty" class="empty"><div class="empty-icon">🏆</div><p>Pas encore de données.</p></div>
+<div id="eqContent" style="display:none">
+  <h2 style="font-size:17px;margin-bottom:16px">🏆 Classement des équipes</h2>
+  <div class="card" style="margin-bottom:16px"><h3>Classement général</h3><div id="teamRanking" class="team-rank"></div></div>
+  <div class="grid-half">
+    <div class="card"><h3>📊 Score par équipe × bloc</h3><canvas id="cTeamBloc"></canvas></div>
+    <div class="card"><h3>📈 Évolution par équipe</h3><canvas id="cTeamTrend"></canvas></div>
+  </div>
+  <div class="card"><h3>📋 Détail</h3><div style="overflow-x:auto"><table class="dt"><thead><tr><th>Équipe</th><th>Audits</th><th>Score</th><th>≤50%</th><th>Meilleur bloc</th><th>Pire bloc</th></tr></thead><tbody id="teamTable"></tbody></table></div></div>
+</div></div>
+
+<!-- ====== HISTORIQUE ====== -->
+<div id="sec-audits" class="section">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><h2 style="font-size:17px">Historique</h2><div><button class="btn btn-outline btn-sm" onclick="exportAll()" style="margin-right:6px">📥 Exporter Excel</button><button class="btn btn-danger btn-sm" onclick="if(confirm('Supprimer TOUT ?'))clearAll()">Réinitialiser</button></div></div>
+<div id="auditListEmpty" class="empty"><div class="empty-icon">📂</div><p>Aucun audit.</p></div>
+<div id="auditList" class="audit-list"></div>
+</div>
+
+<!-- ====== IMPORTER ====== -->
+<div id="sec-import" class="section">
+<div style="max-width:700px;margin:0 auto">
+  <div class="card" style="text-align:center;padding:40px 30px;margin-bottom:16px;border:2px dashed var(--border)" id="dropZone">
+    <h2 style="font-size:20px;margin-bottom:8px">📥 Importer un fichier Excel</h2>
+    <p style="color:var(--text-muted);margin-bottom:18px;font-size:13px">Charge un fichier <strong>Template_Checklist_S5</strong> déjà rempli</p>
+    <button class="btn btn-primary" onclick="document.getElementById('fileIn').click()">Choisir le fichier</button>
+    <input type="file" id="fileIn" accept=".xlsx,.xls" onchange="handleUpload(event)" style="display:none">
+    <div style="color:var(--text-dim);margin:14px 0;font-size:12px">— ou glisse le fichier ici —</div>
+    <p style="font-size:11px;color:var(--text-dim)">Compatible avec toutes les versions du template (29, 30 ou 47 points)</p>
+  </div>
+  <div class="card"><h3>💡 Deux façons de travailler</h3><div style="font-size:13px;color:var(--text-muted);line-height:2">
+    <strong style="color:var(--green)">Option 1 :</strong> Remplir directement dans l'onglet « ✏️ Nouvel audit » — aucun fichier nécessaire<br>
+    <strong style="color:var(--blue)">Option 2 :</strong> Remplir le template Excel sur le terrain, puis l'importer ici<br>
+    <strong style="color:var(--orange)">Les deux options</strong> alimentent le même historique et le même dashboard
+  </div></div>
+</div>
+</div>
+
+</div>
+
+<script>
+const SK='s5_allinone_v1';
+const CHECKLIST=[
+  {bloc:"1. Rôles & Responsabilités",color:"#3b82f6",items:[
+    {no:1,text:"L'opérateur est focalisé sur la machine et la cadence"},
+    {no:2,text:"L'aide-opérateur gère le flux amont/aval (pas l'inverse)"},
+    {no:3,text:"Chaque personne connaît et exécute son rôle assigné"},
+    {no:4,text:"Les écarts de rôle sont détectés et corrigés rapidement"},
+  ]},
+  {bloc:"2. Organisation terrain",color:"#22c55e",items:[
+    {no:5,text:"Palettes (initiales, finies, vides) à leur emplacement standard"},
+    {no:6,text:"Une seule palette ouverte à la fois"},
+    {no:7,text:"Corbeilles déchets et recyclage bien positionnées, sans débordement"},
+    {no:8,text:"Outils critiques présents et à leur emplacement"},
+    {no:9,text:"Aucun objet hors zone (outils, palettes, déchets)"},
+    {no:10,text:"Zones de circulation dégagées, aucun obstacle"},
+    {no:11,text:"Flux amont/aval fluide, sans accumulation"},
+    {no:12,text:"Marquages au sol visibles et respectés"},
+  ]},
+  {bloc:"3. Données & MES",color:"#f59e0b",items:[
+    {no:13,text:"Bonne ligne et bonne machine sélectionnées dans le MES"},
+    {no:14,text:"Bon produit / lot enregistré"},
+    {no:15,text:"Chaque arrêt est déclaré dans la bonne catégorie (pas de « autre » ou « divers »). Les arrêts ont des commentaires s'il y a lieu"},
+    {no:16,text:"Les temps d'arrêts ont des commentaires s'il y a lieu"},
+    {no:17,text:"Les données MES correspondent à ce qui se passe réellement sur le terrain"},
+    {no:18,text:"Les opérateurs savent comment classer un arrêt sans hésitation"},
+  ]},
+  {bloc:"4. Nettoyage & Inspection",color:"#a78bfa",items:[
+    {no:19,text:"Les CIL ont été exécutés"},
+    {no:20,text:"Aucune accumulation anormale de produit ou de déchet"},
+    {no:21,text:"Les anomalies détectées sont signalées (étiquette, note, verbal)"},
+  ]},
+  {bloc:"5. Discipline & Maintien",color:"#22d3ee",items:[
+    {no:22,text:"La checklist S5 est remplie 2 fois par semaine (1 par équipe)"},
+    {no:23,text:"Les écarts simples sont corrigés immédiatement sur place"},
+    {no:24,text:"Les écarts répétitifs sont documentés et transmis au superviseur"},
+    {no:25,text:"Les standards établis (S1-S4) n'ont pas dérivé depuis le dernier audit"},
+    {no:26,text:"L'équipe applique les améliorations décidées aux audits précédents"},
+  ]},
+  {bloc:"6. Performance terrain",color:"#ec4899",items:[
+    {no:27,text:"La cadence affichée correspond à la cadence cible"},
+    {no:28,text:"Pas de ralentissement visible lié à l'organisation ou au flux"},
+    {no:29,text:"Les micro-arrêts sont rares (< 3 observés durant l'audit)"},
+  ]},
+];
+const BLOCS=CHECKLIST.map(b=>b.bloc);
+const BS=BLOCS.map(b=>b.split('. ')[1]||b);
+const BC=CHECKLIST.map(b=>b.color);
+const TC={'Jour A':'#3b82f6','Jour B':'#22d3ee','Nuit A':'#f59e0b','Nuit B':'#a78bfa'};
+const TOTAL=CHECKLIST.reduce((s,b)=>s+b.items.length,0);
+
+let D=[],CH={},formScores={};
+
+function ld(){try{D=JSON.parse(localStorage.getItem(SK))||[];}catch(e){D=[];}}
+function sv(){localStorage.setItem(SK,JSON.stringify(D));}
+function toast(m){const t=document.createElement('div');t.className='toast';t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),3000);}
+function pill(v){const p=Math.round(v*100);return'<span class="sp sp-'+(p>=100?'100':p>=75?'75':p>=50?'50':p>=25?'25':'0')+'">'+p+'%</span>';}
+
+// ============================================================
+// BUILD AUDIT FORM
+// ============================================================
+function buildForm(){
+  const container=document.getElementById('auditBlocs');
+  document.getElementById('aDate').value=new Date().toISOString().split('T')[0];
+  let html='';
+  CHECKLIST.forEach((bloc,bi)=>{
+    html+=`<div class="bloc-section"><div class="bloc-header" style="background:${bloc.color}22;color:${bloc.color}">${bloc.bloc}<span class="bloc-score" id="bs${bi}" style="background:${bloc.color}22;color:${bloc.color}">—</span></div>`;
+    bloc.items.forEach(item=>{
+      html+=`<div class="point-row" id="pr${item.no}"><span class="point-num">${item.no}</span><div style="flex:1"><div class="point-text">${item.text}</div><input class="comment-input" id="cm${item.no}" placeholder="Commentaire (si ≤ 50%)"></div><div class="score-btns">`;
+      [100,75,50,25,0].forEach(v=>{
+        html+=`<button class="score-btn" data-no="${item.no}" data-val="${v/100}" onclick="setScore(${item.no},${v/100},this)">${v}%</button>`;
+      });
+      html+=`</div></div>`;
+    });
+    html+=`</div>`;
+  });
+  container.innerHTML=html;
+}
+
+function setScore(no,val,btn){
+  formScores[no]=val;
+  // Update button states
+  document.querySelectorAll(`[data-no="${no}"]`).forEach(b=>b.className='score-btn');
+  const cls=val>=1?'active-100':val>=0.75?'active-75':val>=0.5?'active-50':val>=0.25?'active-25':'active-0';
+  btn.classList.add(cls);
+  // Show comment if <=50%
+  const cm=document.getElementById('cm'+no);
+  cm.classList.toggle('show',val<=0.5);
+  updateLiveScore();
+}
+
+function updateLiveScore(){
+  const vals=Object.values(formScores);
+  const filled=vals.length;
+  document.getElementById('progressText').textContent=filled+' / '+TOTAL;
+  document.getElementById('progressText').style.color=filled===TOTAL?'var(--green)':'var(--blue)';
+  if(!filled){document.getElementById('lsAvg').textContent='—';document.getElementById('lsFull').textContent='0';document.getElementById('lsWeak').textContent='0';return;}
+  const avg=(vals.reduce((a,b)=>a+b,0)/filled*100).toFixed(1);
+  document.getElementById('lsAvg').textContent=avg+'%';
+  document.getElementById('lsFull').textContent=vals.filter(v=>v>=1).length;
+  document.getElementById('lsWeak').textContent=vals.filter(v=>v<=0.5).length;
+  // Bloc scores
+  CHECKLIST.forEach((bloc,bi)=>{
+    const bvals=bloc.items.map(it=>formScores[it.no]).filter(v=>v!==undefined);
+    const el=document.getElementById('bs'+bi);
+    if(bvals.length){el.textContent=(bvals.reduce((a,b)=>a+b,0)/bvals.length*100).toFixed(0)+'%';}else{el.textContent='—';}
+  });
+}
+
+function saveAudit(){
+  const date=document.getElementById('aDate').value;
+  const quart=document.getElementById('aQuart').value;
+  const equipe=document.getElementById('aEquipe').value;
+  const ligne=document.getElementById('aLigne').value.trim();
+  const auditeur=document.getElementById('aAuditeur').value.trim();
+  if(!date||!ligne||!auditeur){alert('Remplis la Date, Ligne et Auditeur.');return;}
+  if(Object.keys(formScores).length===0){alert('Remplis au moins quelques scores.');return;}
+  // Generate audit ID
+  const existingIds=D.map(r=>parseInt(r.Audit_ID)||0);
+  const newId=existingIds.length?Math.max(...existingIds)+1:1;
+  // Save each point
+  CHECKLIST.forEach(bloc=>{
+    bloc.items.forEach(item=>{
+      if(formScores[item.no]===undefined)return;
+      D.push({
+        Audit_ID:String(newId),Date:date,Quart:quart,Equipe:equipe,Ligne:ligne,Auditeur:auditeur,
+        Bloc:bloc.bloc,No:String(item.no),Point_Controle:item.text,
+        Score:formScores[item.no],Commentaire:document.getElementById('cm'+item.no).value.trim()
+      });
+    });
+  });
+  sv();refreshAll();
+  toast('✅ Audit #'+newId+' enregistré !');
+  resetForm();
+  showSection('dashboard');
+}
+
+function resetForm(){
+  formScores={};
+  document.querySelectorAll('.score-btn').forEach(b=>b.className='score-btn');
+  document.querySelectorAll('.comment-input').forEach(c=>{c.value='';c.classList.remove('show');});
+  updateLiveScore();
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function showSection(n){document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));document.getElementById('sec-'+n).classList.add('active');document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.sec===n));if(n==='dashboard')refresh();if(n==='equipes')refreshEquipes();if(n==='audits')refreshAuditList();}
+function refreshAll(){const u=new Set(D.map(r=>r.Audit_ID)).size;document.getElementById('auditCount').textContent=u+' audit'+(u>1?'s':'');populateFilters();refresh();refreshAuditList();}
+function populateFilters(){fillSel('fLine',[...new Set(D.map(r=>r.Ligne).filter(Boolean))]);fillSel('fQuart',[...new Set(D.map(r=>r.Quart).filter(Boolean))]);fillSel('fEquipe',[...new Set(D.map(r=>r.Equipe).filter(Boolean))]);fillSel('fAudit',[...new Set(D.map(r=>r.Auditeur).filter(Boolean))]);}
+function fillSel(id,v){const s=document.getElementById(id);const c=s.value;while(s.options.length>1)s.remove(1);v.sort().forEach(x=>{const o=document.createElement('option');o.value=x;o.text=x;s.add(o);});s.value=c||'all';}
+function getF(){const fl=document.getElementById('fLine').value,fq=document.getElementById('fQuart').value,fe=document.getElementById('fEquipe').value,fa=document.getElementById('fAudit').value;return D.filter(r=>{if(fl!=='all'&&r.Ligne!==fl)return false;if(fq!=='all'&&r.Quart!==fq)return false;if(fe!=='all'&&r.Equipe!==fe)return false;if(fa!=='all'&&r.Auditeur!==fa)return false;return true;});}
+
+// ============================================================
+// DASHBOARD
+// ============================================================
+function refresh(){const d=getF();if(!d.length){document.getElementById('dashEmpty').style.display='';document.getElementById('dashContent').style.display='none';return;}document.getElementById('dashEmpty').style.display='none';document.getElementById('dashContent').style.display='';
+const avg=d.reduce((s,r)=>s+r.Score,0)/d.length*100;const weak=d.filter(r=>r.Score<=0.5).length;const audits=new Set(d.map(r=>r.Audit_ID));
+const as={};d.forEach(r=>{if(!as[r.Audit_ID])as[r.Audit_ID]={sum:0,cnt:0,date:r.Date,eq:r.Equipe};as[r.Audit_ID].sum+=r.Score;as[r.Audit_ID].cnt++;});
+const auditAvgs=Object.values(as).map(a=>(a.sum/a.cnt)*100);const mn=auditAvgs.length?Math.min(...auditAvgs):0;
+const teams={};d.forEach(r=>{const e=r.Equipe||'?';if(!teams[e])teams[e]={sum:0,cnt:0};teams[e].sum+=r.Score;teams[e].cnt++;});
+const sorted=Object.entries(teams).map(([n,v])=>({n,avg:v.sum/v.cnt*100})).sort((a,b)=>b.avg-a.avg);const best=sorted[0]||null;
+document.getElementById('k1').textContent=avg.toFixed(1)+'%';document.getElementById('k1s').textContent=d.length+' points';
+document.getElementById('k2').textContent=audits.size;document.getElementById('k2s').textContent=new Set(d.map(r=>r.Date)).size+' jours';
+document.getElementById('k3').textContent=weak;document.getElementById('k3s').textContent='à améliorer';
+document.getElementById('k4').textContent=mn.toFixed(1)+'%';document.getElementById('k4s').textContent='audit le + faible';
+document.getElementById('k5').textContent=best?best.n:'—';document.getElementById('k5s').textContent=best?best.avg.toFixed(1)+'%':'';
+rTrend(as);rBloc(d);rWeak(d);rTeam(d);rTable(d);}
+
+function dc(n){if(CH[n]){CH[n].destroy();CH[n]=null;}}
+function rTrend(as){dc('trend');const byD={};Object.values(as).forEach(s=>{if(!byD[s.date])byD[s.date]=[];byD[s.date].push((s.sum/s.cnt)*100);});const dates=Object.keys(byD).sort();const avgs=dates.map(d=>{const v=byD[d];return v.reduce((a,b)=>a+b,0)/v.length;});CH.trend=new Chart(document.getElementById('cTrend'),{type:'line',data:{labels:dates,datasets:[{data:avgs.map(v=>+v.toFixed(1)),borderColor:'#3b82f6',backgroundColor:'rgba(59,130,246,.06)',fill:true,tension:.4,pointRadius:5,pointBackgroundColor:'#3b82f6',borderWidth:2.5,pointBorderColor:'#151921',pointBorderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{min:0,max:100,ticks:{callback:v=>v+'%',color:'#5a6577',font:{size:9}},grid:{color:'#1c2230'}},x:{ticks:{color:'#5a6577',font:{size:9},maxTicksLimit:8},grid:{display:false}}}}});}
+function rBloc(d){dc('bloc');const bs=BLOCS.map(b=>{const it=d.filter(r=>r.Bloc===b);if(!it.length)return 0;return(it.reduce((s,r)=>s+r.Score,0)/it.length)*100;});CH.bloc=new Chart(document.getElementById('cBloc'),{type:'bar',data:{labels:BS,datasets:[{data:bs.map(v=>+v.toFixed(1)),backgroundColor:BC.map(c=>c+'33'),borderColor:BC,borderWidth:2,borderRadius:6}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{min:0,max:100,ticks:{callback:v=>v+'%',color:'#5a6577',font:{size:9}},grid:{color:'#1c2230'}},y:{ticks:{color:'#e2e8f0',font:{size:9}},grid:{display:false}}}}});}
+function rWeak(d){dc('weak');const byPt={};d.forEach(r=>{if(!byPt[r.Point_Controle])byPt[r.Point_Controle]={sum:0,cnt:0};byPt[r.Point_Controle].sum+=r.Score;byPt[r.Point_Controle].cnt++;});const s=Object.entries(byPt).map(([p,v])=>({p,a:v.sum/v.cnt})).sort((a,b)=>a.a-b.a).slice(0,6);CH.weak=new Chart(document.getElementById('cWeak'),{type:'bar',data:{labels:s.map(x=>x.p.length>35?x.p.substring(0,35)+'…':x.p),datasets:[{data:s.map(x=>+(x.a*100).toFixed(1)),backgroundColor:s.map(x=>x.a<=.25?'rgba(239,68,68,.25)':x.a<=.5?'rgba(245,158,11,.25)':'rgba(59,130,246,.15)'),borderColor:s.map(x=>x.a<=.25?'#ef4444':x.a<=.5?'#f59e0b':'#3b82f6'),borderWidth:2,borderRadius:6}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{min:0,max:100,ticks:{callback:v=>v+'%',color:'#5a6577',font:{size:9}},grid:{color:'#1c2230'}},y:{ticks:{color:'#e2e8f0',font:{size:8}},grid:{display:false}}}}});}
+function rTeam(d){dc('team');const teams={};d.forEach(r=>{const e=r.Equipe||'?';if(!teams[e])teams[e]={sum:0,cnt:0};teams[e].sum+=r.Score;teams[e].cnt++;});const labels=Object.keys(teams).sort();const avgs=labels.map(l=>(teams[l].sum/teams[l].cnt*100));const colors=labels.map(l=>TC[l]||'#8492a6');CH.team=new Chart(document.getElementById('cTeam'),{type:'bar',data:{labels,datasets:[{data:avgs.map(v=>+v.toFixed(1)),backgroundColor:colors.map(c=>c+'44'),borderColor:colors,borderWidth:2,borderRadius:8}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{min:0,max:100,ticks:{callback:v=>v+'%',color:'#5a6577',font:{size:9}},grid:{color:'#1c2230'}},x:{ticks:{color:'#e2e8f0',font:{size:10,weight:'bold'}},grid:{display:false}}}}});}
+function rTable(d){const w=d.filter(r=>r.Score<=0.5).sort((a,b)=>(b.Date||'').localeCompare(a.Date||''));const t=document.getElementById('weakTable');if(!w.length){t.innerHTML='<tr><td colspan="7" style="text-align:center;padding:16px;color:var(--text-dim)">Aucun point ≤ 50% 🎉</td></tr>';return;}t.innerHTML=w.slice(0,20).map(r=>'<tr><td>'+r.Date+'</td><td><b>'+r.Equipe+'</b></td><td>'+r.Ligne+'</td><td style="font-size:10px">'+r.Bloc+'</td><td>'+r.Point_Controle+'</td><td>'+pill(r.Score)+'</td><td style="font-size:10px;color:var(--orange)">'+(r.Commentaire||'—')+'</td></tr>').join('');}
+
+// ============================================================
+// ÉQUIPES
+// ============================================================
+function refreshEquipes(){if(!D.length){document.getElementById('eqEmpty').style.display='';document.getElementById('eqContent').style.display='none';return;}document.getElementById('eqEmpty').style.display='none';document.getElementById('eqContent').style.display='';
+const teams={};D.forEach(r=>{const e=r.Equipe||'?';if(!teams[e])teams[e]={sum:0,cnt:0,weak:0,audits:new Set(),blocs:{}};teams[e].sum+=r.Score;teams[e].cnt++;if(r.Score<=0.5)teams[e].weak++;teams[e].audits.add(r.Audit_ID);if(!teams[e].blocs[r.Bloc])teams[e].blocs[r.Bloc]={sum:0,cnt:0};teams[e].blocs[r.Bloc].sum+=r.Score;teams[e].blocs[r.Bloc].cnt++;});
+const sorted=Object.entries(teams).map(([n,v])=>({n,avg:v.sum/v.cnt,cnt:v.cnt,weak:v.weak,audits:v.audits.size,blocs:v.blocs})).sort((a,b)=>b.avg-a.avg);
+const medals=['🥇','🥈','🥉',''];const maxA=sorted.length?sorted[0].avg:1;
+document.getElementById('teamRanking').innerHTML=sorted.map((t,i)=>{const p=(t.avg*100).toFixed(1);const w=Math.max(10,t.avg/maxA*100);const c=TC[t.n]||'#8492a6';return'<div class="team-bar"><span class="team-medal">'+(medals[i]||'')+'</span><span class="team-name">'+t.n+'</span><div class="team-track"><div class="team-fill" style="width:'+w+'%;background:'+c+'">'+p+'%</div></div></div>';}).join('');
+dc('teamBloc');const ds=sorted.map(t=>{const c=TC[t.n]||'#8492a6';return{label:t.n,data:BLOCS.map(b=>t.blocs[b]?+(t.blocs[b].sum/t.blocs[b].cnt*100).toFixed(1):0),borderColor:c,backgroundColor:c+'22',borderWidth:2,pointRadius:3,pointBackgroundColor:c};});
+CH.teamBloc=new Chart(document.getElementById('cTeamBloc'),{type:'radar',data:{labels:BS,datasets:ds},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'#e2e8f0',padding:10,font:{size:10}}}},scales:{r:{min:0,max:100,ticks:{stepSize:25,color:'#5a6577',backdropColor:'transparent',font:{size:8}},grid:{color:'#2a3142'},pointLabels:{color:'#e2e8f0',font:{size:9}}}}}});
+dc('teamTrend');const td={};D.forEach(r=>{const e=r.Equipe||'?';if(!td[e])td[e]={};if(!td[e][r.Date])td[e][r.Date]={sum:0,cnt:0};td[e][r.Date].sum+=r.Score;td[e][r.Date].cnt++;});const allD=[...new Set(D.map(r=>r.Date))].sort();
+const tds=Object.entries(td).map(([n,dates])=>{const c=TC[n]||'#8492a6';return{label:n,data:allD.map(d=>dates[d]?+(dates[d].sum/dates[d].cnt*100).toFixed(1):null),borderColor:c,backgroundColor:c+'11',tension:.4,borderWidth:2,pointRadius:4,pointBackgroundColor:c,spanGaps:true};});
+CH.teamTrend=new Chart(document.getElementById('cTeamTrend'),{type:'line',data:{labels:allD,datasets:tds},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'#e2e8f0',padding:10,font:{size:10}}}},scales:{y:{min:0,max:100,ticks:{callback:v=>v+'%',color:'#5a6577',font:{size:9}},grid:{color:'#1c2230'}},x:{ticks:{color:'#5a6577',font:{size:9},maxTicksLimit:8},grid:{display:false}}}}});
+document.getElementById('teamTable').innerHTML=sorted.map(t=>{const ba=BLOCS.map(b=>({name:b.split('. ')[1]||b,avg:t.blocs[b]?t.blocs[b].sum/t.blocs[b].cnt:0}));const best=ba.reduce((a,b)=>a.avg>=b.avg?a:b);const worst=ba.reduce((a,b)=>a.avg<=b.avg?a:b);const cls=(t.avg*100)>=75?'score-high':(t.avg*100)>=50?'score-mid':'score-low';return'<tr><td><b>'+t.n+'</b></td><td>'+t.audits+'</td><td><span class="'+cls+'" style="font-weight:700">'+(t.avg*100).toFixed(1)+'%</span></td><td>'+t.weak+'</td><td>'+best.name+' ('+Math.round(best.avg*100)+'%)</td><td>'+worst.name+' ('+Math.round(worst.avg*100)+'%)</td></tr>';}).join('');}
+
+// ============================================================
+// AUDIT LIST
+// ============================================================
+function refreshAuditList(){const c=document.getElementById('auditList'),e=document.getElementById('auditListEmpty');const a={};D.forEach(r=>{if(!a[r.Audit_ID])a[r.Audit_ID]={date:r.Date,quart:r.Quart,equipe:r.Equipe,ligne:r.Ligne,auditeur:r.Auditeur,sum:0,cnt:0,weak:0};a[r.Audit_ID].sum+=r.Score;a[r.Audit_ID].cnt++;if(r.Score<=0.5)a[r.Audit_ID].weak++;});const en=Object.entries(a).sort((x,y)=>(y[1].date||'').localeCompare(x[1].date||''));if(!en.length){e.style.display='';c.innerHTML='';return;}e.style.display='none';c.innerHTML=en.map(([id,v])=>{const p=(v.sum/v.cnt)*100;const cl=p>=75?'score-high':p>=50?'score-mid':'score-low';return'<div class="audit-item"><div class="audit-info"><span class="date">#'+id+' — '+v.date+'</span><span class="meta"><b>'+v.equipe+'</b> · '+v.quart+' · '+v.ligne+' · '+v.auditeur+'</span><span class="meta">'+v.cnt+' pts · '+v.weak+' ≤50%</span></div><div><span class="audit-score '+cl+'">'+p.toFixed(0)+'%</span><button class="btn btn-danger btn-sm" style="margin-left:8px" onclick="delA(\''+id+'\')">×</button></div></div>';}).join('');}
+
+function delA(id){if(!confirm('Supprimer #'+id+' ?'))return;D=D.filter(r=>String(r.Audit_ID)!==String(id));sv();refreshAll();}
+function clearAll(){D=[];sv();refreshAll();showSection('audit');}
+function exportAll(){if(!D.length)return;const exp=D.map(r=>({...r,Score_Pct:Math.round(r.Score*100)+'%'}));const ws=XLSX.utils.json_to_sheet(exp);const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Audits_S5');XLSX.writeFile(wb,'Historique_S5.xlsx');}
+
+
+// ============================================================
+// FILE IMPORT (Excel)
+// ============================================================
+function handleUpload(e){const f=e.target.files[0];if(f)parseFile(f);}
+const dz2=document.getElementById('dropZone');
+if(dz2){
+  dz2.addEventListener('dragover',e=>{e.preventDefault();dz2.style.borderColor='#3b82f6';dz2.style.background='#1c2230';});
+  dz2.addEventListener('dragleave',()=>{dz2.style.borderColor='';dz2.style.background='';});
+  dz2.addEventListener('drop',e=>{e.preventDefault();dz2.style.borderColor='';dz2.style.background='';if(e.dataTransfer.files.length)parseFile(e.dataTransfer.files[0]);});
+}
+
+function parseFile(file){
+  const reader=new FileReader();
+  reader.onload=function(ev){
+    try{
+      const wb=XLSX.read(ev.target.result,{type:'array',cellDates:true});
+      let ws=null;for(const sn of['Audit_Detail','Exemple_Demo']){if(wb.Sheets[sn]){ws=wb.Sheets[sn];break;}}
+      if(!ws)ws=wb.Sheets[wb.SheetNames[0]];
+      const raw=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+      let hIdx=-1;
+      for(let i=0;i<Math.min(raw.length,20);i++){
+        const row=raw[i].map(c=>String(c).trim());
+        let hits=0;['Audit_ID','Date','Quart','Equipe','Ligne','Auditeur','Bloc','No','Point_Controle','Score','Commentaire','Resultat'].forEach(h=>{if(row.includes(h))hits++;});
+        if(hits>=4){hIdx=i;break;}
+      }
+      if(hIdx===-1){alert('Format non reconnu. Utilise un template S5.');return;}
+      const headers=raw[hIdx].map(h=>String(h).trim());
+      const col=n=>headers.indexOf(n);
+      const scoreCol=col('Score'),resCol=col('Resultat'),useScore=scoreCol>=0;
+      let nc=0;const ex=new Set(D.map(r=>r.Audit_ID+'|'+r.No+'|'+r.Point_Controle));
+      for(let i=hIdx+1;i<raw.length;i++){
+        const c=raw[i];if(!c||c.length<3)continue;
+        const get=n=>{const idx=col(n);return idx>=0&&c[idx]!==undefined?c[idx]:'';};
+        const aid=String(get('Audit_ID')).trim(),pt=String(get('Point_Controle')).trim(),bloc=String(get('Bloc')).trim();
+        const no=String(get('No')).trim(),comm=String(get('Commentaire')).trim();
+        const quart=String(get('Quart')).trim(),equipe=String(get('Equipe')).trim();
+        const ligne=String(get('Ligne')).trim(),aud=String(get('Auditeur')).trim();
+        let score=null;
+        if(useScore){let rs=get('Score');if(rs===''||rs===null)continue;if(typeof rs==='number')score=rs;else{let n=parseFloat(String(rs).replace('%',''));if(!isNaN(n))score=n>1?n/100:n;}}
+        else{let r=String(get('Resultat')).trim().toUpperCase();if(r==='OUI')score=1;else if(r==='NON')score=0;else continue;}
+        if(score===null||!pt||!aid)continue;
+        let ds='';const rd=get('Date');
+        if(rd instanceof Date)ds=rd.toISOString().split('T')[0];
+        else if(typeof rd==='number'){const d=new Date(Math.round((rd-25569)*86400*1000));ds=d.toISOString().split('T')[0];}
+        else ds=String(rd).trim();
+        const key=aid+'|'+no+'|'+pt;if(ex.has(key))continue;
+        D.push({Audit_ID:aid,Date:ds,Quart:quart,Equipe:equipe,Ligne:ligne,Auditeur:aud,Bloc:bloc,No:no,Point_Controle:pt,Score:score,Commentaire:comm});
+        ex.add(key);nc++;
+      }
+      sv();refreshAll();
+      if(nc>0){toast('\u2705 '+nc+' points importés !');showSection('dashboard');}
+      else alert('Aucune nouvelle donnée.\n\nVérifie que :\n• Audit_ID est rempli\n• Les scores sont remplis\n• Cet audit n\'a pas déjà été importé');
+    }catch(err){alert('Erreur: '+err.message);}
+  };reader.readAsArrayBuffer(file);document.getElementById('fileIn').value='';
+}
+
+ld();buildForm();refreshAll();
+</script>
+</body>
+</html>
